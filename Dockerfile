@@ -1,3 +1,6 @@
+FROM golang AS builder
+RUN go get -v -u github.com/ddollar/forego
+
 FROM nginx:1.19.3
 LABEL maintainer="Jason Wilder mail@jasonwilder.com"
 
@@ -6,8 +9,6 @@ RUN apt-get update \
  && apt-get install -y -q --no-install-recommends \
     ca-certificates \
     wget \
-    git \
-    golang \
  && apt-get clean \
  && rm -r /var/lib/apt/lists/*
 
@@ -17,9 +18,7 @@ RUN echo "daemon off;" >> /etc/nginx/nginx.conf \
  && sed -i 's/worker_processes  1/worker_processes  auto/' /etc/nginx/nginx.conf
 
 # Install Forego
-ENV GOPATH /opt/go
-ENV PATH $PATH:$GOPATH/bin
-RUN go get -u github.com/ddollar/forego
+COPY --from=builder /go/bin/forego /usr/bin/
 
 ENV DOCKER_GEN_VERSION 0.7.4
 
